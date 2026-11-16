@@ -83,6 +83,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Data directory: %s\n", dir)
 	addresses := inventory(startupCtx, o, ish)
 	initialize := rawlog.Begin("startup server.New")
 	service, err := app.New(app.Config{
@@ -100,7 +101,7 @@ func run() error {
 		ManifestPort:  port(o.https),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("open data directory %q: %w", dir, err)
 	}
 	initialize()
 	defer func() { end := rawlog.Begin("shutdown app.Close"); defer end(); service.Close() }()
@@ -172,19 +173,6 @@ func startDiagnostics(ish bool, debug debugMode) error {
 	path, _ := filepath.Abs("debug.log")
 	fmt.Printf("Raw debug log: %s\n", path)
 	return nil
-}
-
-func dataDirectory(data string) (string, error) {
-	defer rawlog.Begin("startup data directory")()
-	dir, err := filepath.Abs(data)
-	if err != nil {
-		return "", err
-	}
-	if err = os.MkdirAll(filepath.Join(dir, "packages"), 0o700); err != nil {
-		return "", fmt.Errorf("create data directory: %w", err)
-	}
-	rawlog.Log("data directory=%q", dir)
-	return dir, nil
 }
 
 // listener is one bound socket and the server that will answer on it.

@@ -31,7 +31,7 @@ func parseOptions(args []string) (options, error) {
 	flags.Var(&o.debug, "debug", "debug mode: web (default when enabled) or raw")
 	flags.BoolVar(&o.public, "public", false, "use separate browser sessions behind an HTTPS reverse proxy")
 	flags.BoolVar(&o.sharedLibrary, "shared-library", false, "share the local library among all users in public mode")
-	flags.StringVar(&o.data, "data", product.DefaultDataDir, "store runtime data in `PATH`")
+	flags.StringVar(&o.data, "data", "", "store runtime data in `PATH`")
 	flags.StringVar(&o.http, "http", product.DefaultHttpPort, "HTTP listen address")
 	flags.StringVar(&o.https, "https", product.DefaultManifestPort, "HTTPS listen address")
 	flags.TextVar(&o.resolver, "localhost-resolver", hosting.Bonjour, "hostname resolver for same-device installation in iSH")
@@ -42,9 +42,14 @@ func parseOptions(args []string) (options, error) {
 	if flags.NArg() != 0 {
 		return o, fmt.Errorf("unexpected argument: %s", flags.Arg(0))
 	}
-	explicitHttps := false
-	flags.Visit(func(option *flag.Flag) { explicitHttps = explicitHttps || option.Name == "https" })
+	explicitHttps, explicitData := false, false
+	flags.Visit(func(option *flag.Flag) {
+		explicitHttps = explicitHttps || option.Name == "https"
+		explicitData = explicitData || option.Name == "data"
+	})
 	switch {
+	case explicitData && o.data == "":
+		return o, errors.New("--data must not be empty")
 	case o.public && (o.debug == debugWeb || explicitHttps):
 		return o, errors.New("--public cannot be combined with --debug=web or --https")
 	case o.sharedLibrary && !o.public:
@@ -139,7 +144,11 @@ Options:
 
   --data PATH
     Runtime data directory.
-    Default: %[7]s
+    Linux, Android (Termux) and iOS/iPadOS (iSH) respect an absolute XDG_DATA_HOME.
+    The selected absolute path is printed at startup.
+    Default: Windows: %%LOCALAPPDATA%%\%[1]s\data
+             macOS: ~/Library/Application Support/%[1]s
+             Linux, Android (Termux), iOS/iPadOS (iSH): ~/.local/share/%[4]s
 
   --settings
     Enable the settings tab and its API.
@@ -157,5 +166,5 @@ Options:
 Examples:
   %[4]s
   %[4]s --public --http 127.0.0.1:%[5]s
-`, product.DisplayName, product.Version, product.Tagline, product.Name, product.DefaultHttpPort, product.DefaultManifestPort, product.DefaultDataDir)
+`, product.DisplayName, product.Version, product.Tagline, product.Name, product.DefaultHttpPort, product.DefaultManifestPort)
 }

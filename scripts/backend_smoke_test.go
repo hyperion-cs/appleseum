@@ -3,8 +3,10 @@ package scripts
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"io"
 	"maps"
@@ -234,6 +236,9 @@ func startSmoke(t *testing.T, binary, data string, addresses []string, debug boo
 			io.Copy(io.Discard, response.Body)
 			response.Body.Close()
 			if response.StatusCode == http.StatusOK {
+				if !strings.Contains(output.String(), "Data directory: "+data+"\n") {
+					t.Fatalf("startup output did not report the data directory: %s", output.String())
+				}
 				if public {
 					for _, line := range strings.Split(output.String(), "\n") {
 						if value, ok := strings.CutPrefix(strings.TrimSpace(line), "Password: "); ok {
@@ -433,7 +438,8 @@ func TestStandaloneBinary(t *testing.T) {
 			"Your apps are here. Even apps delisted from the App Store – install them on iPhone/iPad over your local network, without a cable.",
 			"--http PORT|IP:PORT", "frontend, our API and IPA files", "--https PORT|IP:PORT", "--public", "--shared-library", "Requires --public.",
 			"Cannot be combined with --debug=web or --https.",
-			"If only a port is specified, the server listens on all network interfaces.", "Default: 8080\n", "Default: 8443; disabled with --public\n", "Default: ./data\n",
+			"If only a port is specified, the server listens on all network interfaces.", "Default: 8080\n", "Default: 8443; disabled with --public\n",
+			`%LOCALAPPDATA%\Appleseum\data`, "~/Library/Application Support/Appleseum", "~/.local/share/appleseum", "absolute XDG_DATA_HOME",
 			"Requires a reverse proxy with a valid HTTPS certificate for the entire utility.",
 		} {
 			if !bytes.Contains(output, []byte(expected)) {
@@ -534,5 +540,77 @@ func TestStandaloneBinary(t *testing.T) {
 	}
 	if contents, err := os.ReadFile(blocked); err != nil || !bytes.Equal(contents, marker) {
 		t.Fatal("invalid data directory overwrote an existing file", err)
+	}
+}
+
+func TestStandaloneDefaultDataDirectory(t *testing.T) {
+	if *smokeBinary == "" {
+		t.Skip("requires -binary")
+	}
+	binary, err := filepath.Abs(*smokeBinary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	home := filepath.Join(root, "home")
+	xdg := filepath.Join(root, "xdg")
+	local := filepath.Join(root, "local")
+	var want string
+	switch runtime.GOOS {
+	case "windows":
+		want = filepath.Join(local, "Appleseum", "data")
+	case "darwin":
+		want = filepath.Join(home, "Library", "Application Support", "Appleseum")
+	default:
+		want = filepath.Join(xdg, "appleseum")
+	}
+	occupied, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer occupied.Close()
+	for _, name := range []string{"first", "second"} {
+		cwd := filepath.Join(root, name)
+		if err := os.MkdirAll(cwd, 0700); err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		cmd := exec.CommandContext(ctx, binary, "--public", "--http", occupied.Addr().String())
+		cmd.Dir = cwd
+		cmd.Env = append(os.Environ(), "HOME="+home, "LOCALAPPDATA="+local, "XDG_DATA_HOME="+xdg)
+		output, err := cmd.CombinedOutput()
+		cancel()
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 1 || !bytes.Contains(output, []byte("listen ")) {
+			t.Fatalf("expected the occupied listener to stop startup with exit 1: %v\n%s", err, output)
+		}
+		if !bytes.Contains(output, []byte("Data directory: "+want+"\n")) {
+			t.Fatalf("missing default path: %s", output)
+		}
+		if _, err := os.Stat(filepath.Join(want, "metadata.db")); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(filepath.Join(cwd, "data")); !os.IsNotExist(err) {
+			t.Fatal("created data relative to cwd", err)
+		}
+	}
+
+	if runtime.GOOS != "windows" && os.Geteuid() != 0 {
+		readonly := filepath.Join(root, "readonly")
+		if err := os.MkdirAll(filepath.Join(readonly, "packages"), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(readonly, 0500); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { os.Chmod(readonly, 0700) })
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, binary, "--public", "--http", occupied.Addr().String(), "--data", readonly)
+		output, err := cmd.CombinedOutput()
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 1 || !bytes.Contains(output, []byte("open data directory")) || !bytes.Contains(output, []byte(readonly)) {
+			t.Fatalf("read-only data directory did not stop startup with its path: %v\n%s", err, output)
+		}
 	}
 }

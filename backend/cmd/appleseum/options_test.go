@@ -29,6 +29,7 @@ func TestParseOptions(t *testing.T) {
 		{"extra"},
 		{"--localhost-resolver", "other"},
 		{"--localhost-resolver", ""},
+		{"--data", ""},
 	} {
 		if _, err := parseOptions(args); err == nil {
 			t.Fatalf("parseOptions(%q) accepted invalid options", args)
