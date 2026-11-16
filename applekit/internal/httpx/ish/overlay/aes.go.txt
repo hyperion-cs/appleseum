@@ -1,0 +1,11 @@
+//go:build linux && 386 && ishcrypto
+
+package aes
+
+// KeyIsh exposes immutable expanded key storage to the optional iSH provider.
+func KeyIsh(b *Block) (int, *[60]uint32) { return b.rounds, &b.enc }
+
+// TablesIsh exposes shared AES tables. Providers must never modify them.
+func TablesIsh() ([4]*[256]uint32, *[256]byte) {
+	return [4]*[256]uint32{&te0, &te1, &te2, &te3}, &sbox0
+}

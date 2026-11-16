@@ -1,0 +1,70 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100/
+.Trashes/
+.TemporaryItems/
+.fseventsd/
+.DocumentRevisions-V100/
+.VolumeIcon.icns
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local configuration and runtime data
+.env
+.env.*
+!.env.example
+/data/
+/out/
+*.ipa
+*.log
+debug.log.[0-9]*
+
+# Frontend dependencies and build output
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Go build output
+/bin/
+/build/
+*.exe
+*.test
+*.prof
+
+# Browser checks
+test-results/
+playwright-report/
+
+# Private captures, credentials and local database files
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.har
+*.pcap
+*.pcapng
+*.keylog
+*.p12
+*.pfx
+apple-device.json
+
+# Reviewed protocol assets belong to the source, including key containers.
+!/applekit/**/assets/**

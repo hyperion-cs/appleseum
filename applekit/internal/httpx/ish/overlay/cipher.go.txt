@@ -1,0 +1,25 @@
+//go:build linux && 386 && ishcrypto
+
+package cipher
+
+import (
+	"crypto/internal/fips140/aes"
+	"crypto/internal/fips140/aes/gcm"
+)
+
+// AesIsh is a read-only view of an existing AES key.
+type AesIsh = gcm.AesIsh
+
+// RegisterGcmIsh connects an iSH provider without replacing the standard AEAD.
+// Register once, before the application starts work; key views are read-only.
+// The callback receives validated nonce, buffers and TLS record lengths;
+// false reports authentication failure, which standard Open handles.
+func RegisterGcmIsh(factory func(AesIsh) func(out, nonce, ciphertext, aad []byte) bool) {
+	gcm.RegisterIsh(factory)
+}
+
+// AesTablesIsh returns the shared tables, which must never be modified.
+func AesTablesIsh() ([4]*[256]uint32, *[256]byte) { return aes.TablesIsh() }
+
+// GhashIsh computes GHASH with the standard implementation and caller-owned output.
+func GhashIsh(out, key *[16]byte, inputs ...[]byte) { gcm.GhashIsh(out, key, inputs...) }

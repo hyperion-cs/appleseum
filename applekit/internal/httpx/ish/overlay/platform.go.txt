@@ -1,0 +1,67 @@
+// Copyright 2024 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+//go:build linux && 386 && ishcrypto
+
+package gcm
+
+import (
+	"crypto/internal/fips140/aes"
+	"sync"
+	"sync/atomic"
+)
+
+// AesIsh is a read-only view of an existing AES key; pointers retain its owner.
+type AesIsh struct {
+	Rounds  int
+	Key     *[60]uint32
+	Encrypt func([]byte, []byte)
+}
+
+type factoryIsh = func(AesIsh) func(out, nonce, ciphertext, aad []byte) bool
+
+var providerIsh atomic.Pointer[factoryIsh]
+
+// RegisterIsh installs a provider once, before the application starts work.
+func RegisterIsh(factory factoryIsh) {
+	if factory == nil || !providerIsh.CompareAndSwap(nil, &factory) {
+		panic("crypto/cipher: invalid or duplicate iSH GCM provider")
+	}
+}
+
+func checkGenericIsExpected() {}
+
+type stateIsh struct {
+	once    sync.Once
+	factory factoryIsh
+	open    func(out, nonce, ciphertext, aad []byte) bool
+}
+type gcmPlatformData struct{ ish *stateIsh }
+
+func initGCM(g *GCM) {
+	if f := providerIsh.Load(); f != nil && g.nonceSize == 12 && g.tagSize == 16 {
+		g.ish = &stateIsh{factory: *f}
+	}
+}
+
+func seal(out []byte, g *GCM, nonce, plaintext, data []byte) {
+	sealGeneric(out, g, nonce, plaintext, data)
+}
+
+func open(out []byte, g *GCM, nonce, ciphertext, data []byte) error {
+	if g.ish == nil || len(ciphertext) < 4096 || len(ciphertext) > 16401 || len(data) > 32 {
+		return openGeneric(out, g, nonce, ciphertext, data)
+	}
+	g.ish.once.Do(func() {
+		rounds, key := aes.KeyIsh(&g.cipher)
+		g.ish.open = g.ish.factory(AesIsh{rounds, key, g.cipher.Encrypt})
+	})
+	if !g.ish.open(out, nonce, ciphertext, data) {
+		return errOpen
+	}
+	return nil
+}
+
+// GhashIsh reuses standard GHASH without allocating a result slice.
+func GhashIsh(out, key *[16]byte, inputs ...[]byte) { ghash(out, key, inputs...) }

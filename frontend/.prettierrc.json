@@ -1,0 +1,21 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "overrides": [
+    {
+      "files": "**/*",
+      "options": {
+        "singleQuote": true,
+        "semi": false,
+        "printWidth": 100
+      },
+      "excludeFiles": "../scripts/**"
+    },
+    {
+      "files": "*.vue",
+      "options": {
+        "htmlWhitespaceSensitivity": "ignore"
+      }
+    }
+  ]
+}

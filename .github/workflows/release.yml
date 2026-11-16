@@ -1,0 +1,246 @@
+name: Appleseum release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (e.g. v1.0.0 or v1.1.0-rc.1)
+        required: true
+        type: string
+      release_type:
+        description: Release type
+        required: true
+        default: draft
+        type: choice
+        options: [prod, draft, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: appleseum-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
+
+env:
+  VERSION: ${{ inputs.version }}
+  CGO_ENABLED: "0"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Installers expect archive names that start with appleseum-v.
+      - name: Validate release version
+        run: |
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]] ||
+            { echo "Invalid release version: $VERSION" >&2; exit 1; }
+
+      - &checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - &setup-go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            applekit/go.sum
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci --prefix frontend
+      - run: npm test --prefix frontend
+      - run: node scripts/frontend_check_ui.js
+
+      - name: Build embedded frontend
+        run: APPLESEUM_VERSION="${VERSION#v}" node scripts/backend_build.js --frontend-only
+
+      - name: Test public Go modules
+        run: |
+          go test ./... -count=1
+          go -C applekit test ./... -count=1
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: embedded-frontend
+          path: frontend/dist/
+          if-no-files-found: error
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - windows-amd64
+          - darwin-amd64
+          - darwin-arm64
+          - linux-amd64
+          - linux-arm64
+          - ios-ish
+          - android-arm64
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - *checkout
+      - *setup-go
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: embedded-frontend
+          path: frontend/dist/
+
+      - name: Prepare and test iSH crypto
+        if: matrix.target == 'ios-ish'
+        run: |
+          go -C applekit run ./internal/httpx/ish/overlay -out ../build/ish/overlay.json
+          export GOOS=linux GOARCH=386 GO386=softfloat
+          go test -tags=ishcrypto -overlay=build/ish/overlay.json \
+            crypto/internal/fips140/aes/gcm crypto/cipher -run TestGCM -count=1
+          go -C applekit test -tags=ishcrypto -overlay=../build/ish/overlay.json \
+            ./internal/httpx/ish -count=1
+
+      - name: Setup Android NDK
+        if: matrix.target == 'android-arm64'
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r30
+          add-to-path: false
+
+      - name: Build binary
+        env:
+          NDK_PATH: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          IFS=- read -r GOOS GOARCH _ <<<"$TARGET"
+          export GOOS GOARCH
+          flags=()
+          case "$TARGET" in
+            # iSH on iOS/iPadOS emulates 32-bit x86 Linux; software floating point is required.
+            ios-ish)
+              export GOOS=linux GOARCH=386 GO386=softfloat
+              flags=(-tags=ishcrypto -overlay=build/ish/overlay.json)
+              ;;
+            # Android needs libc networking, provided by CGO and the NDK.
+            android-arm64)
+              export CGO_ENABLED=1
+              export CC="$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+              ;;
+          esac
+          go build "${flags[@]}" -trimpath \
+            -ldflags="-s -w -X appleseum/backend/internal/product.Version=${VERSION#v}" \
+            -o build/ ./backend/cmd/appleseum
+
+      - name: Test standalone Linux binary
+        if: matrix.target == 'linux-amd64'
+        run: go test ./scripts -count=1 -args -binary ../build/appleseum
+
+      # Unix archives are tar.gz: tar and gzip exist everywhere, unlike unzip.
+      - name: Package binary
+        run: |
+          archive="appleseum-$VERSION-$TARGET"
+          if [[ "$TARGET" == windows-* ]]; then
+            zip -9j "$archive.zip" build/appleseum.exe README.md README_RU.md LICENSE
+          else
+            tar -czf "$archive.tar.gz" --owner=0 --group=0 --numeric-owner \
+              -C build appleseum -C .. README.md README_RU.md LICENSE
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: appleseum-${{ matrix.target }}
+          path: appleseum-${{ env.VERSION }}-${{ matrix.target }}.*
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      # download-artifact fails when an artifact does not match its upload digest.
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: appleseum-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: |
+          cd artifacts
+          sha256sum -- * > SHA256SUMS
+          tag="appleseum-$VERSION"
+          title="Appleseum $VERSION"
+          args=()
+          case "$RELEASE_TYPE" in
+            draft) args=(--draft) ;;
+            dev)
+              tag="appleseum-dev-$VERSION"
+              title+=" dev"
+              args=(--prerelease --latest=false)
+              ;;
+          esac
+          # --target only applies when GitHub creates a new tag.
+          tag_commit=$(git ls-remote --tags --sort=refname \
+            "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/$tag" "refs/tags/$tag^{}" \
+            | tail -n 1 | cut -f1)
+          if [[ -n "$tag_commit" && "$tag_commit" != "$GITHUB_SHA" ]]; then
+            echo "Tag $tag points to $tag_commit, but binaries were built from $GITHUB_SHA" >&2
+            exit 1
+          fi
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$title" --generate-notes "${args[@]}" -- *
+
+  build-and-push-image:
+    if: inputs.release_type == 'prod'
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - *checkout
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # The Dockerfile sets the source and license labels.
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+            ghcr.io/${{ github.repository }}:latest
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+          cache-from: type=gha,scope=appleseum-image
+          cache-to: type=gha,mode=max,scope=appleseum-image
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            COMMIT=${{ github.sha }}

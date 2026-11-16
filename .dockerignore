@@ -1,0 +1,24 @@
+# Only application source is sent to the builder.
+**
+!LICENSE
+!go.mod
+!go.sum
+!backend/
+!backend/**
+!applekit/
+!applekit/**
+!frontend/
+!frontend/**
+!scripts/
+!scripts/**
+**/node_modules/
+**/dist/
+**/data/
+**/.env
+**/.env.*
+**/*.log
+**/*.db
+**/*.db-*
+**/*.sqlite*
+**/*.har
+**/*.pcap*

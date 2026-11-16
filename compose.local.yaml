@@ -1,0 +1,15 @@
+name: appleseum
+
+services:
+  appleseum:
+    image: ghcr.io/hyperion-cs/appleseum:latest
+    container_name: appleseum
+    network_mode: host
+    volumes:
+      - appleseum-data:/data
+    restart: unless-stopped
+    stop_grace_period: 20s
+
+volumes:
+  appleseum-data:
+    name: appleseum-data

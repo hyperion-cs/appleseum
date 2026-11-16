@@ -1,0 +1,324 @@
+[
+  {
+    "id": "Mac17,7",
+    "name": "MacBook Pro (14″, M5 Pro or M5 Max, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,9",
+    "name": "MacBook Pro (14″, M5 Pro or M5 Max, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,6",
+    "name": "MacBook Pro (16″, M5 Pro or M5 Max, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,8",
+    "name": "MacBook Pro (16″, M5 Pro or M5 Max, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,4",
+    "name": "MacBook Air (15″, M5, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,3",
+    "name": "MacBook Air (13″, M5, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,5",
+    "name": "MacBook Neo (13″, A18 Pro, 2026)",
+    "year": 2026,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac17,2",
+    "name": "MacBook Pro (14″, M5, 2025)",
+    "year": 2025,
+    "minOS": 26,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,13",
+    "name": "MacBook Air (15″, M4, 2025)",
+    "year": 2025,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,12",
+    "name": "MacBook Air (13″, M4, 2025)",
+    "year": 2025,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,1",
+    "name": "MacBook Pro (14″, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,6",
+    "name": "MacBook Pro (14″, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,8",
+    "name": "MacBook Pro (14″, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,7",
+    "name": "MacBook Pro (16″, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac16,5",
+    "name": "MacBook Pro (16″, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,13",
+    "name": "MacBook Air (15″, M3, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,12",
+    "name": "MacBook Air (13″, M3, 2024)",
+    "year": 2024,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,3",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,6",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,8",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,10",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,7",
+    "name": "MacBook Pro (16″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,9",
+    "name": "MacBook Pro (16″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac15,11",
+    "name": "MacBook Pro (16″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,5",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,9",
+    "name": "MacBook Pro (14″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,6",
+    "name": "MacBook Pro (16″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,10",
+    "name": "MacBook Pro (16″, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,15",
+    "name": "MacBook Air (15″, M2, 2023)",
+    "year": 2023,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,7",
+    "name": "MacBook Pro (13″, M2, 2022)",
+    "year": 2022,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "Mac14,2",
+    "name": "MacBook Air (M2, 2022)",
+    "year": 2022,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro18,3",
+    "name": "MacBook Pro (14″, 2021)",
+    "year": 2021,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro18,4",
+    "name": "MacBook Pro (14″, 2021)",
+    "year": 2021,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro18,1",
+    "name": "MacBook Pro (16″, 2021)",
+    "year": 2021,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro18,2",
+    "name": "MacBook Pro (16″, 2021)",
+    "year": 2021,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro17,1",
+    "name": "MacBook Pro (13″, M1, 2020)",
+    "year": 2020,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookPro16,3",
+    "name": "MacBook Pro (13″, 2020, Two Thunderbolt 3 ports)",
+    "year": 2020,
+    "minOS": 15,
+    "maxOS": 15
+  },
+  {
+    "id": "MacBookPro16,2",
+    "name": "MacBook Pro (13″, 2020, Four Thunderbolt 3 ports)",
+    "year": 2020,
+    "minOS": 15,
+    "maxOS": 26
+  },
+  {
+    "id": "MacBookAir10,1",
+    "name": "MacBook Air (M1, 2020)",
+    "year": 2020,
+    "minOS": 15,
+    "maxOS": 27
+  },
+  {
+    "id": "MacBookAir9,1",
+    "name": "MacBook Air (Retina, 13″, 2020)",
+    "year": 2020,
+    "minOS": 15,
+    "maxOS": 15
+  },
+  {
+    "id": "MacBookPro16,1",
+    "name": "MacBook Pro (16″, 2019)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 26
+  },
+  {
+    "id": "MacBookPro16,4",
+    "name": "MacBook Pro (16″, 2019)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 26
+  },
+  {
+    "id": "MacBookPro15,4",
+    "name": "MacBook Pro (13″, 2019, Two Thunderbolt 3 ports)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 15
+  },
+  {
+    "id": "MacBookPro15,1",
+    "name": "MacBook Pro (15″, 2018–2019)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 15
+  },
+  {
+    "id": "MacBookPro15,3",
+    "name": "MacBook Pro (15″, 2019)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 15
+  },
+  {
+    "id": "MacBookPro15,2",
+    "name": "MacBook Pro (13″, 2018–2019, Four Thunderbolt 3 ports)",
+    "year": 2019,
+    "minOS": 15,
+    "maxOS": 15
+  }
+]
