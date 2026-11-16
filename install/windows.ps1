@@ -77,7 +77,7 @@
         $Action = if ($Updating) { 'Updated' } else { 'Installed' }
         Write-Host "${Action}: $Destination"
         if ($Updating) {
-            Write-Host 'Data was not changed. Start appleseum.exe with the same --data directory or working directory as before.'
+            Write-Host 'Data was not changed. If you used --data, keep the same path when starting appleseum.exe.'
         } else {
             Set-Location -LiteralPath $AppDir
             Write-Host 'Run: ./appleseum.exe'

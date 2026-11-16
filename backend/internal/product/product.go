@@ -8,7 +8,6 @@ const (
 	RepositoryUrl       = "https://github.com/hyperion-cs/appleseum"
 	DefaultHttpPort     = "8080"
 	DefaultManifestPort = "8443"
-	DefaultDataDir      = "./data"
 )
 
 // Release builds override Version with -ldflags -X.

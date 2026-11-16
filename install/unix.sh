@@ -94,7 +94,7 @@ main() {
       ;;
   esac
   if [ "$updating" = true ]; then
-    printf 'Data was not changed. Start %s with the same --data directory or working directory as before.\n' "$run"
+    printf 'Data was not changed. If you used --data, keep the same path when starting %s.\n' "$run"
   else
     printf 'Run: %s\n' "$run"
   fi
