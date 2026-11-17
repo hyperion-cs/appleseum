@@ -199,7 +199,7 @@ docker compose -f compose.local.yaml up -d
 Appleseum написан на чистом [Go](https://en.wikipedia.org/wiki/Go_%28programming_language%29) и распространяется одним небольшим самодостаточным исполняемым файлом. Способы установки описаны в [соответствующем разделе](#3-install).
 
 #### <a name="6.11-internals" /> [6.11.](#6.11-internals) Где узнать больше о внутреннем устройстве Appleseum?
-- [Статья на Хабре](#) [[зеркало на GitHub Gist](#)]
+- [Статья на Хабре](https://habr.com/ru/articles/1109020/) [[зеркало в Gist](https://gist.github.com/hyperion-cs/0e22b34837b834e43de1e99f92e7ad7a)]
 
 #### <a name="6.12-build-from-source" /> [6.12.](#6.12-build-from-source) Как собрать Appleseum из исходников?
 В этом вопросе можно ориентироваться на [файл релизной сборки](.github/workflows/release.yml).

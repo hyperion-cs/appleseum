@@ -199,7 +199,7 @@ Yes, in either local mode. You can [import existing `.ipa` files](#4-ipa-import)
 Appleseum is written in pure [Go](https://en.wikipedia.org/wiki/Go_%28programming_language%29) and comes as a single lightweight, self-contained executable. Installation methods are described in [section 3](#3-install).
 
 #### <a name="6.11-internals" /> [6.11.](#6.11-internals) Where can I learn more about how Appleseum works internally?
-- [Article on Habr](#) [[GitHub Gist mirror](#)]
+- [Article on Habr](https://habr.com/ru/articles/1109020/) [[Gist mirror](https://gist.github.com/hyperion-cs/0e22b34837b834e43de1e99f92e7ad7a)]
 
 #### <a name="6.12-build-from-source" /> [6.12.](#6.12-build-from-source) How can I build Appleseum from source?
 You can use the [release workflow](.github/workflows/release.yml) as a reference.
