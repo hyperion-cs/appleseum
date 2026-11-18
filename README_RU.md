@@ -101,9 +101,18 @@ u=https://raw.githubusercontent.com/hyperion-cs/appleseum/main/install/unix.sh; 
 Команду для дальнейшего запуска подскажет установщик.
 
 ### <a name="3.3-docker" /> [3.3.](#3.3-docker) Docker
-Appleseum также можно запустить через [Docker](https://en.wikipedia.org/wiki/Docker_%28software%29):
+#### <a name="3.3.1-docker-run" /> [3.3.1.](#3.3.1-docker-run) Запуск через `docker run`
+Запуск через Docker с сетью хоста:
 ```sh
 docker run -d --name appleseum --network host \
+  -v appleseum-data:/data ghcr.io/hyperion-cs/appleseum:latest
+```
+> [!NOTE]
+> В Docker Desktop для `--network host` нужна версия 4.34 или новее. В **Settings → Network** проверьте флажок [**Enable host networking**](https://docs.docker.com/engine/network/drivers/host/#docker-desktop). Если включили его, нажмите **Apply and restart**.
+
+Или с явным пробросом портов:
+```sh
+docker run -d --name appleseum -p 8080:8080 -p 8443:8443 \
   -v appleseum-data:/data ghcr.io/hyperion-cs/appleseum:latest
 ```
 
@@ -116,16 +125,17 @@ docker logs appleseum
 сохраняется при удалении контейнера. Команда `docker stop appleseum`
 останавливает сервер, `docker start appleseum` запускает его снова.
 
-#### <a name="3.3.1-keep-it-running-with-docker-compose" /> [3.3.1.](#3.3.1-keep-it-running-with-docker-compose) Docker Compose
-Для Compose подготовлены базовые шаблоны, которые можно редактировать под свои задачи. Для локального режима сохраните файл и запустите сервер:
+#### <a name="3.3.2-docker-compose" /> [3.3.2.](#3.3.2-docker-compose) Запуск через Docker Compose
+Для Compose подготовлены базовые шаблоны, которые можно редактировать под свои задачи. Для локального режима загрузите файл и запустите сервер:
 ```sh
 curl -fsSLo compose.local.yaml https://raw.githubusercontent.com/hyperion-cs/appleseum/main/compose.local.yaml
 docker compose -f compose.local.yaml up -d
 ```
+> [!NOTE]
+> Если вы используете Docker Desktop, для параметра `network_mode: host` в `compose.local.yaml` нужна версия 4.34 или новее. В **Settings → Network** проверьте флажок [**Enable host networking**](https://docs.docker.com/engine/network/drivers/host/#docker-desktop). Если включили его, нажмите **Apply and restart**.
 
-Для [публичного режима](#2.2-public-server) предусмотрен `compose.public.yaml`.
-Оба файла используют один том `appleseum-data`; контейнер перезапускается вместе с Docker.
-При переходе с `docker run` на Compose остановите и удалите прежний контейнер
+Для [публичного режима](#2.2-public-server) предусмотрен шаблон `compose.public.yaml`.
+Оба файла используют один том `appleseum-data`; контейнер перезапускается вместе с Docker. При переходе с `docker run` на Compose остановите и удалите прежний контейнер
 `appleseum`.
 
 ### <a name="3.4-updates" /> [3.4.](#3.4-updates) Обновление утилиты

@@ -101,9 +101,18 @@ u=https://raw.githubusercontent.com/hyperion-cs/appleseum/main/install/unix.sh; 
 The installer will show the command for future launches.
 
 ### <a name="3.3-docker" /> [3.3.](#3.3-docker) Docker
-You can also run Appleseum with [Docker](https://en.wikipedia.org/wiki/Docker_%28software%29):
+#### <a name="3.3.1-docker-run" /> [3.3.1.](#3.3.1-docker-run) Run with `docker run`
+Run with Docker using host networking:
 ```sh
 docker run -d --name appleseum --network host \
+  -v appleseum-data:/data ghcr.io/hyperion-cs/appleseum:latest
+```
+> [!NOTE]
+> On Docker Desktop, `--network host` requires version 4.34 or later. Under **Settings → Network**, make sure [**Enable host networking**](https://docs.docker.com/engine/network/drivers/host/#docker-desktop) is checked. If you enable it, select **Apply and restart**.
+
+Or publish the ports explicitly:
+```sh
+docker run -d --name appleseum -p 8080:8080 -p 8443:8443 \
   -v appleseum-data:/data ghcr.io/hyperion-cs/appleseum:latest
 ```
 
@@ -116,16 +125,17 @@ Your downloads and settings are stored in the `appleseum-data` volume,
 which is preserved when you remove the container.
 `docker stop appleseum` stops the server; `docker start appleseum` starts it again.
 
-#### <a name="3.3.1-keep-it-running-with-docker-compose" /> [3.3.1.](#3.3.1-keep-it-running-with-docker-compose) Docker Compose
-Basic Compose templates are provided, and you can edit them to suit your needs. For local mode, save the file and start the server:
+#### <a name="3.3.2-docker-compose" /> [3.3.2.](#3.3.2-docker-compose) Run with Docker Compose
+Basic Compose templates are provided, and you can edit them to suit your needs. For local mode, download the file and start the server:
 ```sh
 curl -fsSLo compose.local.yaml https://raw.githubusercontent.com/hyperion-cs/appleseum/main/compose.local.yaml
 docker compose -f compose.local.yaml up -d
 ```
+> [!NOTE]
+> If you use Docker Desktop, the `network_mode: host` setting in `compose.local.yaml` requires version 4.34 or later. Under **Settings → Network**, make sure [**Enable host networking**](https://docs.docker.com/engine/network/drivers/host/#docker-desktop) is checked. If you enable it, select **Apply and restart**.
 
-[Public mode](#2.2-public-server) uses `compose.public.yaml`.
-Both files use the same `appleseum-data` volume; the container restarts with Docker.
-When switching from `docker run` to Compose, stop and remove the previous
+For [public mode](#2.2-public-server), use the `compose.public.yaml` template.
+Both files use the same `appleseum-data` volume. The container restarts with Docker. When switching from `docker run` to Compose, stop and remove the previous
 `appleseum` container.
 
 ### <a name="3.4-updates" /> [3.4.](#3.4-updates) Updating the utility
