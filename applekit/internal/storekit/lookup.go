@@ -30,7 +30,11 @@ type storeApp struct {
 
 func lookupStoreApps(ctx context.Context, client *http.Client, country string, ids []int64, progress func(float64)) (map[int64]storeApp, error) {
 	if country == "" {
-		return nil, fmt.Errorf("unknown account storefront country")
+		// Fall back to the US storefront when the account's storefront is not
+		// in the known map, so a refresh does not fail outright. Delisted
+		// detection may be slightly off for the real country, but the catalog
+		// still loads.
+		country = "us"
 	}
 	if client == nil {
 		client = httpx.NewClient(nil)
