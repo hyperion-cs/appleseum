@@ -43,9 +43,30 @@ func (s Scope) catalogSize() string {
 	return "COALESCE((SELECT f.size " + s.catalogPackages() + " ORDER BY f.id DESC LIMIT 1),catalog.size)"
 }
 
-// catalogDownloadable: visible ready files prevent another download; active jobs belong to their owner.
+// savedVersion matches a ready package against a requested Apple version. Without
+// metadata, preserve the conservative app-level duplicate protection. Imported
+// and older downloads are compared by both display version and build.
+func savedVersion(owner, app, version string) string {
+	target := "SELECT v.version_id,v.version,v.build FROM app_versions v JOIN app_version_lists l ON l.account_id=v.account_id AND l.app_id=v.app_id WHERE v.account_id=" + owner + " AND v.app_id=" + app + " AND v.version_id=COALESCE(NULLIF(" + version + ",''),l.latest) AND v.version!=''"
+	return "(NOT EXISTS(" + target + ") OR EXISTS(SELECT 1 FROM (" + target + ") v WHERE " +
+		"(f.shown_version=v.version AND (v.build='' OR f.version=v.build)) OR EXISTS(SELECT 1 FROM downloads d WHERE d.package_id=f.id AND d.version_id=v.version_id)))"
+}
+
+func (s Scope) catalogCurrentPackages(version string) string {
+	return s.catalogPackages() + " AND " + savedVersion("catalog.account_id", "catalog.app_id", version)
+}
+
+func (s Scope) catalogUpdateAvailable() string {
+	return "(EXISTS(SELECT 1 " + s.catalogPackages() + ") AND NOT EXISTS(SELECT 1 " + s.catalogCurrentPackages("''") + "))"
+}
+
+// catalogDownloadable excludes the latest saved version and the owner's active jobs.
 func (s Scope) catalogDownloadable() string {
-	return "NOT EXISTS(SELECT 1 " + s.catalogPackages() + ")" +
+	return s.catalogDownloadableVersion("''")
+}
+
+func (s Scope) catalogDownloadableVersion(version string) string {
+	return "NOT EXISTS(SELECT 1 " + s.catalogCurrentPackages(version) + ")" +
 		" AND NOT EXISTS(SELECT 1 FROM transfers j WHERE j.account_id=catalog.account_id AND j.app_id=catalog.app_id AND j.status IN " + activeStatuses + ")"
 }
 

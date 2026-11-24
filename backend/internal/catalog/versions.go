@@ -26,7 +26,7 @@ const (
 	versionListLifetime = 15 * time.Minute
 	maxVersionPosition  = math.MaxInt32
 	fetchWeight         = 80.0
-	artworkWeight       = 19.0
+	artworkWeight       = 10.0
 )
 
 // RemoteError is a failure Apple reported, as opposed to one of local storage.
@@ -36,8 +36,9 @@ func (e *RemoteError) Error() string { return e.Err.Error() }
 
 func (e *RemoteError) Unwrap() error { return e.Err }
 
-// Refresh replaces the saved purchase list with Apple's and caches its artwork.
-func Refresh(ctx context.Context, s *db.Db, icons *library.Icons, call account.Call, owner, sessionId string, progress func(float64)) error {
+// Refresh replaces the purchase list, caches artwork, and checks saved IPAs
+// against Apple's latest version without waiting for the version-list cache.
+func Refresh(ctx context.Context, s *db.Db, icons *library.Icons, call account.Call, scope db.Scope, sessionId string, progress func(float64)) error {
 	var apps []applekit.CatalogApp
 	err := call(ctx, func(session account.Session) error {
 		var err error
@@ -47,8 +48,54 @@ func Refresh(ctx context.Context, s *db.Db, icons *library.Icons, call account.C
 	if err != nil {
 		return &RemoteError{err}
 	}
-	icons.FromCatalog(ctx, owner, apps, func(value float64) { progress(fetchWeight + value*artworkWeight/100) })
-	return s.ReplaceCatalog(ctx, owner, sessionId, apps)
+	icons.FromCatalog(ctx, scope.Owner, apps, func(value float64) { progress(fetchWeight + value*artworkWeight/100) })
+	if err := s.ReplaceCatalog(ctx, scope.Owner, sessionId, apps); err != nil {
+		return err
+	}
+	saved, err := s.SavedCatalogApps(ctx, scope)
+	if err != nil {
+		return err
+	}
+	for i, appId := range saved {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		var ids []string
+		var latest string
+		err := call(ctx, func(session account.Session) error {
+			var err error
+			ids, latest, err = session.Versions(ctx, appId)
+			return err
+		})
+		if err != nil {
+			if authentication(err) || ctx.Err() != nil {
+				return &RemoteError{err}
+			}
+			continue // One unavailable app must not prevent refreshing the purchase list.
+		}
+		if _, err := s.SaveVersionList(ctx, scope.Owner, appId, latest, ids); err != nil {
+			return err
+		}
+		var metadata applekit.VersionMetadata
+		err = call(ctx, func(session account.Session) error {
+			var err error
+			metadata, err = session.VersionInfo(ctx, appId, latest, func(float64) {})
+			return err
+		})
+		if err != nil {
+			if authentication(err) || ctx.Err() != nil {
+				return &RemoteError{err}
+			}
+			continue
+		}
+		if metadata.Version != "" {
+			if err := s.SaveVersionMetadata(ctx, scope.Owner, appId, latest, metadata); err != nil {
+				return err
+			}
+		}
+		progress(fetchWeight + artworkWeight + float64(i+1)*9/float64(len(saved)))
+	}
+	return nil
 }
 
 func versionPage(input wire.VersionPageRequest) (paging.Page, error) {

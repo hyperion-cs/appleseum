@@ -121,6 +121,7 @@ export interface CatalogItem {
   purchasedAt: string
   icon: string
   size: number | null
+  updateAvailable: boolean
   inLibrary: boolean
   id: string
   name: string

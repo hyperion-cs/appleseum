@@ -24,11 +24,11 @@ export function useCatalog(context: ListContext) {
     },
   })
 
-  const canSelect = (row: CatalogItem) => !row.inLibrary
+  const canSelect = (row: CatalogItem) => !row.inLibrary || row.updateAvailable
 
   const failure = () => (state.value.catalog.status === 'failed' ? state.value.catalog.error : '')
 
-  // Drops selected apps that reached the library since they were chosen.
+  // Drops selections whose latest version reached the library since they were chosen.
   async function updateSelectedDownloads() {
     const ids = [...list.marked.value]
     if (!ids.length) return
