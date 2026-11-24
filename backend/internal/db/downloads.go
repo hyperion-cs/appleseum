@@ -18,17 +18,17 @@ var running = statusList(wire.Downloading, wire.Preparing)
 
 func now() string { return time.Now().UTC().Format(time.RFC3339Nano) }
 
-// EnqueueDownloads queues the apps that are neither saved nor already in the queue.
+// EnqueueDownloads queues missing versions, excluding the owner's active jobs.
 func (d *Db) EnqueueDownloads(ctx context.Context, scope Scope, sessionId string, appIds []int64, versions map[int64]string) error {
 	return d.tx(ctx, func(tx *sql.Tx) error {
-		insert, err := tx.PrepareContext(ctx, "INSERT INTO packages(id,app_id,account_id,name,created_at) SELECT ?,app_id,account_id,name,? FROM catalog WHERE account_id=? AND app_id=? AND "+scope.catalogDownloadable())
+		insert, err := tx.PrepareContext(ctx, "INSERT INTO packages(id,app_id,account_id,name,created_at) SELECT ?,app_id,account_id,name,? FROM catalog WHERE account_id=? AND app_id=? AND "+scope.catalogDownloadableVersion("?5"))
 		if err != nil {
 			return err
 		}
 		defer insert.Close()
 		for _, appId := range appIds {
 			id := NewId()
-			result, err := insert.ExecContext(ctx, id, now(), scope.Owner, appId)
+			result, err := insert.ExecContext(ctx, id, now(), scope.Owner, appId, versions[appId])
 			if err != nil {
 				return err
 			}
@@ -100,6 +100,7 @@ func (d *Db) ClaimDownload(ctx context.Context, scope Scope, sessionId string) (
 		if !scope.shared() {
 			saved += " AND f.account_id=p.account_id"
 		}
+		saved += " AND " + savedVersion("p.account_id", "p.app_id", "downloads.version_id")
 		if _, err := tx.ExecContext(ctx, "UPDATE downloads SET status=?,speed=0,error='' WHERE status=? AND session_id=? AND EXISTS("+saved+")", wire.Canceled, wire.Queued, sessionId); err != nil {
 			return err
 		}

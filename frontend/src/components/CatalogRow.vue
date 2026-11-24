@@ -13,7 +13,7 @@ defineEmits<{ toggle: [] }>()
 <template>
   <TableRow
     selection
-    :selectable="!row.inLibrary"
+    :selectable="!row.inLibrary || row.updateAvailable"
     :selected="marked"
     :disabled="busy"
     :label="row.name"
@@ -32,6 +32,7 @@ defineEmits<{ toggle: [] }>()
         <span class="badge" :class="{ warning: row.delisted }">
           {{ row.delisted ? t.delisted : t.listed }}
         </span>
+        <span v-if="row.updateAvailable" class="badge warning">{{ t.updateAvailable }}</span>
         <span
           v-if="row.inLibrary"
           class="badge downloaded-badge"

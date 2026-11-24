@@ -3,14 +3,15 @@ package wire
 import "appleseum/backend/internal/fault"
 
 type CatalogItem struct {
-	Cursor      string `json:"cursor"`
-	PurchasedAt string `json:"purchasedAt"`
-	Icon        string `json:"icon"`
-	Size        *int64 `json:"size"`
-	InLibrary   bool   `json:"inLibrary"`
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	Delisted    bool   `json:"delisted"`
+	Cursor          string `json:"cursor"`
+	PurchasedAt     string `json:"purchasedAt"`
+	Icon            string `json:"icon"`
+	Size            *int64 `json:"size"`
+	UpdateAvailable bool   `json:"updateAvailable"`
+	InLibrary       bool   `json:"inLibrary"`
+	Id              string `json:"id"`
+	Name            string `json:"name"`
+	Delisted        bool   `json:"delisted"`
 }
 
 type CatalogPage = Page[CatalogItem]

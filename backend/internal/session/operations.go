@@ -71,7 +71,7 @@ func (w *Workspace) RefreshCatalog() error {
 		defer cancel()
 		var code fault.Code
 		if err := w.apple.Lock(ctx); err == nil {
-			err = catalog.Refresh(ctx, w.r.db, w.r.library.Icons, w.call, owner, w.Id, func(value float64) {
+			err = catalog.Refresh(ctx, w.r.db, w.r.library.Icons, w.call, db.Scope{Owner: owner, Public: w.r.cfg.Public, SharedLibrary: w.r.cfg.SharedLibrary}, w.Id, func(value float64) {
 				w.mu.Lock()
 				defer w.mu.Unlock()
 				if current() && w.catalog.status == wire.CatalogLoading && value > w.catalog.progress {

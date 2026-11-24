@@ -46,6 +46,7 @@ export function createDemo(now: () => number = Date.now) {
     name: app.name,
     delisted: index < 12,
     inLibrary: false,
+    updateAvailable: false,
     size: app.size,
     purchasedAt: app.purchasedAt,
     icon:
@@ -431,7 +432,9 @@ export function createDemo(now: () => number = Date.now) {
         ).filter(
           (item) =>
             (value.filter || value.ids.includes(item.id)) &&
-            (isLibrary || !(item as CatalogItem).inLibrary),
+            (isLibrary ||
+              !(item as CatalogItem).inLibrary ||
+              (item as CatalogItem).updateAvailable),
         )
         if (items.length > maxSelectionSize) return failure('selection_too_large', 400)
         if (isLibrary)
@@ -443,7 +446,9 @@ export function createDemo(now: () => number = Date.now) {
             manageIds: items.map((item) => item.id),
           })
         return json({
-          ids: (items as CatalogItem[]).filter((item) => !item.inLibrary).map((item) => item.id),
+          ids: (items as CatalogItem[])
+            .filter((item) => !item.inLibrary || item.updateAvailable)
+            .map((item) => item.id),
         })
       }
       case 'POST /downloads': {

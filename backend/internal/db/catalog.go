@@ -70,10 +70,10 @@ func (d *Db) Catalog(ctx context.Context, scope Scope, q Query) (wire.CatalogPag
 	return readPage(ctx, d.conn, list{
 		columns: "app_id,name,delisted," + scope.catalogSize() + ",purchased_at," +
 			"COALESCE((SELECT icon FROM app_assets a WHERE a.account_id=catalog.account_id AND a.app_id=catalog.app_id),'')," +
-			"EXISTS(SELECT 1 " + scope.catalogPackages() + ")",
+			"EXISTS(SELECT 1 " + scope.catalogPackages() + ")," + scope.catalogUpdateAvailable(),
 		source: "catalog", where: where, filter: filter, sorts: scope.catalogSorts(),
 	}, q, func(item *wire.CatalogItem) ([]any, *string) {
-		return []any{&item.Id, &item.Name, &item.Delisted, &item.Size, &item.PurchasedAt, &item.Icon, &item.InLibrary}, &item.Cursor
+		return []any{&item.Id, &item.Name, &item.Delisted, &item.Size, &item.PurchasedAt, &item.Icon, &item.InLibrary, &item.UpdateAvailable}, &item.Cursor
 	})
 }
 
@@ -121,7 +121,7 @@ func (d *Db) ClearCatalog(ctx context.Context, owner string) ([]string, error) {
 }
 
 // CatalogSelection resolves a selection to app ids, newest first. With
-// downloadable set it keeps only apps that are neither saved nor queued.
+// downloadable set it keeps only missing latest versions without active jobs.
 func (d *Db) CatalogSelection(ctx context.Context, scope Scope, input wire.Selection, downloadable bool) ([]int64, error) {
 	where, args := "WHERE account_id=?", []any{scope.Owner}
 	if downloadable {
@@ -149,4 +149,9 @@ func (d *Db) CatalogSelection(ctx context.Context, scope Scope, input wire.Selec
 		return nil, fault.SelectionTooLarge
 	}
 	return apps, err
+}
+
+// SavedCatalogApps limits update checks to IPAs visible to this account.
+func (d *Db) SavedCatalogApps(ctx context.Context, scope Scope) ([]int64, error) {
+	return collect(ctx, d.conn, value[int64], "SELECT app_id FROM catalog WHERE account_id=? AND EXISTS(SELECT 1 "+scope.catalogPackages()+") ORDER BY app_id", scope.Owner)
 }

@@ -525,3 +525,14 @@ test('disposing a list discards queued table settings writes', async (t) => {
     1,
   )
 })
+
+test('catalog allows selecting downloaded apps with an available update', async (t) => {
+  const { list, requests } = catalog(t)
+  requests[0]!.finish(page('saved', { inLibrary: true, updateAvailable: true }))
+  await setImmediate()
+  const row = list.rows.value[0]!
+  assert.equal(list.canSelect(row), true)
+  list.setSelection(['saved'])
+  assert.equal(list.marked.value.has('saved'), true)
+  assert.equal(list.canSelect({ ...row, updateAvailable: false }), false)
+})

@@ -8,6 +8,7 @@ async function lists(page: Page, downloadsActive = false) {
     name: `Application ${index + 1}`,
     delisted: true,
     inLibrary: false,
+    updateAvailable: false,
     icon: '',
     purchasedAt: '',
     size: null,

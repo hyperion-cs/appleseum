@@ -1,6 +1,7 @@
 // Available apps and the download dialog.
 export const ru = {
   downloaded: 'Скачано',
+  updateAvailable: 'Доступно обновление',
   refreshing: (value: string) => `Обновление (${value})`,
   download: 'Скачать',
   downloadVersion: 'Версия для скачивания',
@@ -29,6 +30,7 @@ export const ru = {
 
 export const en: typeof ru = {
   downloaded: 'Downloaded',
+  updateAvailable: 'Update available',
   refreshing: (value: string) => `Refreshing (${value})`,
   download: 'Download',
   downloadVersion: 'Version to download',
